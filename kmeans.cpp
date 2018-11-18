@@ -5,8 +5,12 @@
 #include <time.h>
 #include <algorithm>
 #include <string>
-
 using namespace std;
+/**
+Created:2018-11-17, Updated:2018-11-17
+Author: Siqing Ma
+Version: V0.1T
+**/
 
 class Point
 {
@@ -66,10 +70,9 @@ public:
 	Cluster(int id_cluster, Point point)
 	{
 		this->id_cluster = id_cluster;
+		int dimension = point.getDimension();
 
-		int total_values = point.getDimension();
-
-		for (int i = 0; i < total_values; i++)
+		for (int i = 0; i < dimension; i++)
 			central_values.push_back(point.getValue(i));
 
 		points.push_back(point);
@@ -131,46 +134,49 @@ private:
 	int getNearestCentreId(Point point)
 	{
 		double sum = 0.0, min_dist;
-		int id_cluster_center = 0;
+		int nearest_centre_id = 0;
 
-		/*
-		// Uses euclidean distance
-		for (int i = 0; i < nd; i++)
-		{
-			sum += pow(clusters[0].getCentralValue(i) -
-				point.getValue(i), 2.0);
-		}*/
-
+		
+		// Initial
 		// Uses city block distance
 		for (int i = 0; i < nd; i++)
 		{
 			sum += abs(clusters[0].getCentralValue(i) -
 				point.getValue(i));
 		}
-
-		min_dist = sqrt(sum);
-
+		min_dist = sum;
+		
 		for (int i = 1; i < nc; i++)
 		{
 			double dist;
 			sum = 0.0;
 
+			/*
+		    // Uses euclidean distance
 			for (int j = 0; j < nd; j++)
 			{
 				sum += pow(clusters[i].getCentralValue(j) -
 					point.getValue(j), 2.0);
 			}
-
 			dist = sqrt(sum);
+			*/
+
+			// Uses city block distance
+			for (int j = 0; j < nd; j++)
+			{
+				sum += abs(clusters[i].getCentralValue(j) -
+					point.getValue(j));
+			}
+			dist = sum;
 
 			if (dist < min_dist)
 			{
 				min_dist = dist;
-				id_cluster_center = i;
+				nearest_centre_id = i;
 			}
 		}
 
-		return id_cluster_center;
+		return nearest_centre_id;
 	}
 
 public:
@@ -182,24 +188,28 @@ public:
 		this->max_iterations = max_iterations;
 	}
 
+	Cluster getCluster(int index) 
+	{
+		return clusters[index];
+	}
+
 	void run(vector<Point> & points)
 	{
 		if (nc > np)
 			return;
 
-		vector<int> prohibited_indexes;
+		vector<int> now_indexes;
 
-		// choose K distinct values for the centers of the clusters
+		// Initial the cluster centre using exsiting points
 		for (int i = 0; i < nc; i++)
 		{
 			while (true)
 			{
 				int index_point = rand() % np;
 
-				if (find(prohibited_indexes.begin(), prohibited_indexes.end(),
-					index_point) == prohibited_indexes.end())
+				if (find(now_indexes.begin(), now_indexes.end(), index_point) == now_indexes.end())
 				{
-					prohibited_indexes.push_back(index_point);
+					now_indexes.push_back(index_point);
 					points[index_point].setCluster(i);
 					Cluster cluster(i, points[index_point]);
 					clusters.push_back(cluster);
@@ -209,7 +219,6 @@ public:
 		}
 
 		int iter = 1;
-
 		while (true)
 		{
 			bool done = true;
@@ -253,32 +262,7 @@ public:
 				cout << "Break in iteration " << iter << "\n\n";
 				break;
 			}
-
 			iter++;
-		}
-
-		// shows elements of clusters
-		for (int i = 0; i < nc; i++)
-		{
-			int total_points_cluster = clusters[i].getTotalPoints();
-
-			cout << "Cluster " << clusters[i].getID() + 1 << endl;
-			for (int j = 0; j < total_points_cluster; j++)
-			{
-				cout << "Point " << clusters[i].getPoint(j).getID() + 1 << ": ";
-				for (int p = 0; p < nd; p++)
-					cout << clusters[i].getPoint(j).getValue(p) << " ";
-
-
-				cout << endl;
-			}
-
-			cout << "Cluster values: ";
-
-			for (int j = 0; j < nd; j++)
-				cout << clusters[i].getCentralValue(j) << " ";
-
-			cout << "\n\n";
 		}
 	}
 };
@@ -311,6 +295,30 @@ int main(int argc, char *argv[])
 
 	KMeans kmeans(nc, np, nd, max_iterations);
 	kmeans.run(points);
+
+	for (int i = 0; i < nc; i++)
+	{
+		int total_points_cluster = kmeans.getCluster(i).getTotalPoints();
+
+		cout << "Cluster " << kmeans.getCluster(i).getID() + 1 << endl;
+		for (int j = 0; j < total_points_cluster; j++)
+		{
+			cout << "Point " << kmeans.getCluster(i).getPoint(j).getID() + 1 << ": ";
+			for (int p = 0; p < nd; p++)
+				cout << kmeans.getCluster(i).getPoint(j).getValue(p) << " ";
+
+
+			cout << endl;
+		}
+
+		cout << "Cluster values: ";
+
+		for (int j = 0; j < nd; j++)
+			cout << kmeans.getCluster(i).getCentralValue(j) << " ";
+
+		cout << "\n\n";
+	}
+
 	int i;
 	cin >> i;
 	return 0;
