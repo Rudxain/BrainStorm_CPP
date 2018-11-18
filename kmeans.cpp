@@ -99,7 +99,7 @@ Point Cluster::getPoint(int index)
 	return points[index];
 }
 
-int Cluster::getTotalPoints()
+int Cluster::getSize()
 {
 	return points.size();
 }
@@ -108,6 +108,7 @@ int Cluster::getID()
 {
 	return id_cluster;
 }
+
 
 
 // return ID of nearest center 
@@ -159,17 +160,24 @@ int KMeans::getNearestCentreId(Point point)
 	return nearest_centre_id;
 }
 
-KMeans::KMeans(int nc, int np, int nd, int max_iterations)
+KMeans::KMeans(int nc, int np, int nd, int max_iterations, vector<Point> centers)
 {
 	this->nc = nc;
 	this->np = np;
 	this->nd = nd;
 	this->max_iterations = max_iterations;
+	this->centers = centers;
 }
 
 Cluster KMeans::getCluster(int index)
 {
 	return clusters[index];
+}
+
+vector<int> KMeans::getDependency() 
+{
+	
+	return dependency;
 }
 
 void KMeans::run(vector<Point> & points)
@@ -179,6 +187,7 @@ void KMeans::run(vector<Point> & points)
 
 	vector<int> now_indexes;
 
+	
 	// Initial the cluster centre using exsiting points
 	for (int i = 0; i < nc; i++)
 	{
@@ -196,6 +205,7 @@ void KMeans::run(vector<Point> & points)
 			}
 		}
 	}
+	
 
 	int iter = 1;
 	while (true)
@@ -217,6 +227,7 @@ void KMeans::run(vector<Point> & points)
 				clusters[id_nearest_center].addPoint(points[i]);
 				done = false;
 			}
+			
 		}
 
 		// recalculating the center of each cluster
@@ -224,7 +235,7 @@ void KMeans::run(vector<Point> & points)
 		{
 			for (int j = 0; j < nd; j++)
 			{
-				int total_points_cluster = clusters[i].getTotalPoints();
+				int total_points_cluster = clusters[i].getSize();
 				double sum = 0.0;
 
 				if (total_points_cluster > 0)
@@ -242,6 +253,20 @@ void KMeans::run(vector<Point> & points)
 			break;
 		}
 		iter++;
+	}
+
+	for (int i = 0; i < np; i++)
+	{
+		dependency.push_back(0);
+	}
+	for (int i = 0; i < nc; i++)
+	{
+		for (int j = 0; j < getCluster(i).getSize(); j++)
+		{
+			int id = getCluster(i).getPoint(j).getID();
+			//cout << "id: " << id << endl;
+			dependency[id] = i;
+		}
 	}
 }
 

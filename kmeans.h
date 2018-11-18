@@ -44,20 +44,23 @@ class Cluster
 	  double getCentralValue(int index);
 	  void setCentralValue(int index, double value);
 	  Point getPoint(int index);
-	  int getTotalPoints();
 	  int getID();
+	  int getSize();
 };
 
 class KMeans
 {
   private:
 	  int nc, nd, np, max_iterations;
+	  vector<Point> centers;
 	  vector<Cluster> clusters;
+	  vector<int> dependency;
 	  // return ID of nearest center 
 	  int getNearestCentreId(Point point);
 	
   public:
-	  KMeans(int nc, int np, int nd, int max_iterations);
+	  KMeans(int nc, int np, int nd, int max_iterations, vector<Point> centers);
 	  Cluster getCluster(int index);
+	  vector<int> getDependency();
 	  void run(vector<Point> & points);
 };

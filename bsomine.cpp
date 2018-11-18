@@ -5,63 +5,125 @@
 #include <time.h>
 #include <algorithm>
 #include <string>
+#include <random>
 #include "kmeans.h"
+#define INF 100000000;
 using namespace std;
 
 
-int main(int argc, char *argv[])
+vector<Point> random_mat(double min, double max, int m, int n) 
 {
-	srand(time(NULL));
-	cout << "K_means start" << endl;
-	int np, nd, nc, max_iterations, has_name;
-
-	cin >> np >> nd >> nc >> max_iterations >> has_name;
-
-	vector<Point> points;
-	string point_name;
-
-	for (int i = 0; i < np; i++)
+	vector<Point> po;
+	for (int i = 0; i < m; i++)
 	{
-		vector<double> values;
-
-		for (int j = 0; j < nd; j++)
+		vector<double> content;
+		for (int j = 0; j < n; j++)
 		{
-			double value;
-			cin >> value;
-			values.push_back(value);
+			default_random_engine e;
+			uniform_real_distribution<double> u(min, max);
+			content.push_back(u(e));
 		}
-
-		Point p(i, values);
-		points.push_back(p);
+		Point point(i, content);
+		po.push_back(point);
 	}
+	return po;
+}
 
-	KMeans kmeans(nc, np, nd, max_iterations);
-	kmeans.run(points);
+int main(int argc, char *argv[])
+{	
+	srand(time(NULL));
 
-	for (int i = 0; i < nc; i++)
+	const int np = 48; // Number of population
+	const int nd = 24; // Number of dimension
+	const int nc = 3;  // Number of cluster
+	// Ideas limits
+	const double rang_l = -5.12;
+	const double rang_r = 5.12;
+	// Pick any deviations you want
+	const int max_iteration = 8;
+	// Pick any laps you want
+	const int max_run = 1;
+
+	// Runs off laps from here
+	for (int idx = 0; idx < max_run; idx++) 
 	{
-		int total_points_cluster = kmeans.getCluster(i).getTotalPoints();
+		// Genetate a random 
+		vector<Point> po = random_mat(rang_l, rang_r, np, nd);
+		vector<Point> po_s = random_mat(rang_l, rang_r, np, nd);
+		
+		vector<double> prob(nc);
+		vector<double> best(nc);
+		
+		vector<Point> centers = random_mat(rang_l, rang_r, nc, nd);
+		vector<Point> centers_copy = random_mat(rang_l, rang_r, nc, nd);
+		vector<double> best_fitness(max_iteration);
 
-		cout << "Cluster " << kmeans.getCluster(i).getID() + 1 << endl;
-		for (int j = 0; j < total_points_cluster; j++)
+		vector<double> fit_popu(np);
+		vector<double> fit_popu_sorted(np);
+
+		// Evaluate the fitness of n ideas
+		for (int times = 0; times < np; times++) 
 		{
-			cout << "Point " << kmeans.getCluster(i).getPoint(j).getID() + 1 << ": ";
-			for (int p = 0; p < nd; p++)
-				cout << kmeans.getCluster(i).getPoint(j).getValue(p) << " ";
-
-
-			cout << endl;
+			fit_popu[times] = 1; // Add the evaluation function!!!!!!!!
 		}
 
-		cout << "Cluster values: ";
+		int n_iteration = 0;
+		while (n_iteration < max_iteration) 
+		{
+			KMeans kmeans(nc, np, nd, 100, centers);
+			kmeans.run(po);
+			vector<int> cluster = kmeans.getDependency(); // Containing cluster indices of each observation.
+			vector<double> fit_values(nc);
+			vector<int> number_in_cluster(nc); // The number of points in each cluster
 
-		for (int j = 0; j < nd; j++)
-			cout << kmeans.getCluster(i).getCentralValue(j) << " ";
+			for (int clu = 0; clu < nc; clu++) 
+			{
+				fit_values[clu] = INF;
+				number_in_cluster[clu] = kmeans.getCluster(clu).getSize();
+			}
 
-		cout << "\n\n";
+			for (int times = 0; times < np; times++) 
+			{
+				if (fit_values[cluster[times]] > fit_popu[times]) 
+				{
+					fit_values[cluster[times]] = fit_popu[times];
+					best[cluster[times]] = times;					
+				}
+			}
+
+			// Initialization cluster
+			vector<int> counter_cluster(nc);
+			vector<int> acculate_num_cluster(nc);
+			acculate_num_cluster[0] = 0;
+
+			// Check with every cluster
+			for (int times = 1; times < nc; times++) 
+			{
+				acculate_num_cluster[times] = acculate_num_cluster[times - 1] + number_in_cluster[times - 1];
+			}
+
+			// Evaluate the indiciduals
+			for (int times = 0; times < np; times++) 
+			{
+				counter_cluster[cluster[times]]++;
+				int temldx = acculate_num_cluster[cluster[times]] + counter_cluster[cluster[times]];
+				po_s[temldx] = po[times];
+				fit_popu_sorted[temldx] = fit_popu[times];
+			}
+
+			// Rank individuals in each cluster
+			for (int times = 0; times < nc; times++) 
+			{
+				//centers[times]
+			}
+
+
+			n_iteration++;
+		}
 	}
 
 	int i;
 	cin >> i;
 	return 0;
 }
+
