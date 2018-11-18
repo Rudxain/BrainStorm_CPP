@@ -1,2 +1,2 @@
 # BSO_CPP
-Brain Storm Algorithm cpp implemented.
+Brain Storm Optimazation Algorithm demo in cpp.
