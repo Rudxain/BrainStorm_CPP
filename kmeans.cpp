@@ -110,6 +110,14 @@ int Cluster::getID()
 }
 
 
+KMeans::KMeans(int nc, int np, int nd, int max_iterations, vector<Point> centers)
+{
+	this->nc = nc;
+	this->np = np;
+	this->nd = nd;
+	this->max_iterations = max_iterations;
+	this->init_centres = centers;
+}
 
 // return ID of nearest center 
 int KMeans::getNearestCentreId(Point point)
@@ -160,15 +168,6 @@ int KMeans::getNearestCentreId(Point point)
 	return nearest_centre_id;
 }
 
-KMeans::KMeans(int nc, int np, int nd, int max_iterations, vector<Point> centers)
-{
-	this->nc = nc;
-	this->np = np;
-	this->nd = nd;
-	this->max_iterations = max_iterations;
-	this->centers = centers;
-}
-
 Cluster KMeans::getCluster(int index)
 {
 	return clusters[index];
@@ -187,8 +186,8 @@ void KMeans::run(vector<Point> & points)
 
 	vector<int> now_indexes;
 
-	
-	// Initial the cluster centre using exsiting points
+	/*_2018-11-19
+	// Initial the cluster centre using exsiting points£¨random pick)
 	for (int i = 0; i < nc; i++)
 	{
 		while (true)
@@ -204,6 +203,13 @@ void KMeans::run(vector<Point> & points)
 				break;
 			}
 		}
+	}*/
+
+	// Initial the cluster centre by using the provided centre_2018-11-19
+	for (int i = 0; i < nc; i++) 
+	{
+		Cluster centre(i, init_centres[i]);
+		clusters.push_back(centre);
 	}
 	
 

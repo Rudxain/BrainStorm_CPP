@@ -11,7 +11,7 @@
 using namespace std;
 
 
-vector<Point> random_mat(double min, double max, int m, int n) 
+vector<Point> mat_random(double min, double max, int m, int n) 
 {
 	vector<Point> po;
 	for (int i = 0; i < m; i++)
@@ -27,6 +27,11 @@ vector<Point> random_mat(double min, double max, int m, int n)
 		po.push_back(point);
 	}
 	return po;
+}
+
+void mat_copy(vector<Point> a, vector<Point> b) 
+{
+	
 }
 
 int main(int argc, char *argv[])
@@ -48,14 +53,14 @@ int main(int argc, char *argv[])
 	for (int idx = 0; idx < max_run; idx++) 
 	{
 		// Genetate a random 
-		vector<Point> po = random_mat(rang_l, rang_r, np, nd);
-		vector<Point> po_s = random_mat(rang_l, rang_r, np, nd);
+		vector<Point> po = mat_random(rang_l, rang_r, np, nd);
+		vector<Point> po_s = mat_random(rang_l, rang_r, np, nd);
 		
 		vector<double> prob(nc);
 		vector<double> best(nc);
 		
-		vector<Point> centers = random_mat(rang_l, rang_r, nc, nd);
-		vector<Point> centers_copy = random_mat(rang_l, rang_r, nc, nd);
+		vector<Point> centers = mat_random(rang_l, rang_r, nc, nd);
+		vector<Point> centers_copy = mat_random(rang_l, rang_r, nc, nd);
 		vector<double> best_fitness(max_iteration);
 
 		vector<double> fit_popu(np);
@@ -102,7 +107,7 @@ int main(int argc, char *argv[])
 				acculate_num_cluster[times] = acculate_num_cluster[times - 1] + number_in_cluster[times - 1];
 			}
 
-			// Evaluate the indiciduals
+			// Evaluate the individuals
 			for (int times = 0; times < np; times++) 
 			{
 				counter_cluster[cluster[times]]++;
@@ -114,9 +119,9 @@ int main(int argc, char *argv[])
 			// Rank individuals in each cluster
 			for (int times = 0; times < nc; times++) 
 			{
-				//centers[times]
+				centers[times] = po[best[times]];
 			}
-
+			mat_copy(centers, centers_copy);
 
 			n_iteration++;
 		}
