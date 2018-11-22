@@ -26,6 +26,11 @@ int Point::getID()
 	return id_point;
 }
 
+void Point::setID(int id) 
+{
+	this->id_point = id;
+}
+
 void Point::setCluster(int id_cluster)
 {
 	this->id_cluster = id_cluster;
@@ -175,18 +180,18 @@ Cluster KMeans::getCluster(int index)
 
 vector<int> KMeans::getDependency() 
 {
-	
 	return dependency;
 }
 
-void KMeans::run(vector<Point> & points)
+void KMeans::run(vector<Point> & po)
 {
 	if (nc > np)
 		return;
 
 	vector<int> now_indexes;
 
-	/*_2018-11-19
+	/*
+	//_2018-11-19
 	// Initial the cluster centre using exsiting points£¨random pick)
 	for (int i = 0; i < nc; i++)
 	{
@@ -197,40 +202,61 @@ void KMeans::run(vector<Point> & points)
 			if (find(now_indexes.begin(), now_indexes.end(), index_point) == now_indexes.end())
 			{
 				now_indexes.push_back(index_point);
-				points[index_point].setCluster(i);
-				Cluster cluster(i, points[index_point]);
+				po[index_point].setCluster(i);
+				Cluster cluster(i, po[index_point]);
 				clusters.push_back(cluster);
 				break;
 			}
 		}
-	}*/
+	}
+	*/
 
+	
 	// Initial the cluster centre by using the provided centre_2018-11-19
 	for (int i = 0; i < nc; i++) 
 	{
+		init_centres[i].setID(-1);
 		Cluster centre(i, init_centres[i]);
 		clusters.push_back(centre);
 	}
-	
+
+	/*
+	// Print the cluster centre
+	for (int i = 0; i < nc; i++)
+	{
+		cout << "clu: " << i;
+		for (int j = 0; j < nd; j++)
+		{
+			cout << clusters[i].getCentralValue(j) << " ";
+		}
+		cout << endl;
+	}
+	*/
+
+	for (int i = 0; i < np; i++) 
+	{
+		po[i].setCluster(-1);
+	}
 
 	int iter = 1;
 	while (true)
 	{
 		bool done = true;
-
 		// associates each point to the nearest center
 		for (int i = 0; i < np; i++)
 		{
-			int id_old_cluster = points[i].getCluster();
-			int id_nearest_center = getNearestCentreId(points[i]);
+			int id_old_cluster = po[i].getCluster();
+			int id_nearest_center = getNearestCentreId(po[i]);
 
 			if (id_old_cluster != id_nearest_center)
 			{
 				if (id_old_cluster != -1)
-					clusters[id_old_cluster].removePoint(points[i].getID());
+					clusters[id_old_cluster].removePoint(po[i].getID());
 
-				points[i].setCluster(id_nearest_center);
-				clusters[id_nearest_center].addPoint(points[i]);
+				po[i].setCluster(id_nearest_center);
+				clusters[id_nearest_center].removePoint(-1); // µÍÐ§µÄ²Ù×÷
+				clusters[id_nearest_center].addPoint(po[i]);
+
 				done = false;
 			}
 			

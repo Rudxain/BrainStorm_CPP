@@ -23,6 +23,7 @@ class Point
   public:
 	  Point(int id_point, vector<double>& values);
 	  int getID();
+	  void setID(int id);
 	  void setCluster(int id_cluster);
 	  int getCluster();
 	  double getValue(int index);
@@ -52,7 +53,7 @@ class KMeans
 {
   private:
 	  int nc, nd, np, max_iterations;
-	  vector<Point> centers;
+	  vector<Point> init_centres;
 	  vector<Cluster> clusters;
 	  vector<int> dependency;
 	  // return ID of nearest center 
