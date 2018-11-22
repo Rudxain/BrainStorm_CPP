@@ -28,7 +28,7 @@ class Point
 	  int getCluster();
 	  double getValue(int index);
 	  int getDimension();
-	  void addValue(double value);
+	  void setValue(int index, double value);
 };
 
 class Cluster

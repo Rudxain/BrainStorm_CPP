@@ -7,9 +7,10 @@
 #include <string>
 #include <random>
 #include "kmeans.h"
+#include "function.h"
 #define INF 100000000;
 using namespace std;
-double randa() 
+double uniRand() 
 {
 	default_random_engine e;
 	random_device r;
@@ -18,7 +19,7 @@ double randa()
 	return u(e);
 }
 
-vector<Point> mat_random(double min, double max, int m, int n) 
+vector<Point> matRandom(double min, double max, int m, int n) 
 {
 	vector<Point> po;
 	for (int i = 0; i < m; i++)
@@ -38,7 +39,7 @@ vector<Point> mat_random(double min, double max, int m, int n)
 	return po;
 }
 
-Point po_random(double min, double max, int m, int n, int id) 
+Point pointRandom(double min, double max, int n, int id) 
 {
 	vector<double> content;
 	for (int j = 0; j < n; j++)
@@ -54,6 +55,31 @@ Point po_random(double min, double max, int m, int n, int id)
 
 }
 
+Point pointMtply(double coef, Point origin) 
+{
+	int dim = origin.getDimension();
+	vector<double> newvel(dim);
+	for (int i = 0; i < dim; i++) 
+	{
+		newvel[i] = coef * origin.getValue(i);
+	}
+	Point ans(-1, newvel); // 记得重置id值
+	return ans;
+}
+
+Point pointAdd(Point p1, Point p2) 
+{
+	int dim = p1.getDimension();
+	vector<double> newvel(dim);
+	
+	for (int i = 0; i < dim; i++) 
+	{
+		newvel[i] = p1.getValue(i) + p2.getValue(i);
+	}
+	Point ans(-1, newvel); // 记得重置id值
+	return ans;
+}
+
 
 int main(int argc, char *argv[])
 {	
@@ -62,37 +88,38 @@ int main(int argc, char *argv[])
 	const int np = 48; // Number of population
 	const int nd = 24; // Number of dimension
 	const int nc = 3;  // Number of cluster
-	// Ideas limits
+	// Point values limits
 	const double rang_l = -5.12;
 	const double rang_r = 5.12;
 	// Pick any deviations you want
 	const int max_iteration = 8;
 	// Pick any laps you want
 	const int max_run = 1;
+	Function fun;
 
 	// Runs off laps from here
 	for (int idx = 0; idx < max_run; idx++) 
 	{
 		
 		// Genetate a random 
-		vector<Point> po = mat_random(rang_l, rang_r, np, nd);
-		vector<Point> po_sort = mat_random(rang_l, rang_r, np, nd);
+		vector<Point> po = matRandom(rang_l, rang_r, np, nd);
+		vector<Point> po_sort = matRandom(rang_l, rang_r, np, nd);
 		
 		vector<double> prob(nc);
 		vector<double> best(nc);
 		
-		vector<Point> centers = mat_random(rang_l, rang_r, nc, nd);
-		vector<Point> centers_copy = mat_random(rang_l, rang_r, nc, nd);
+		vector<Point> centers = matRandom(rang_l, rang_r, nc, nd);
+		vector<Point> centers_copy = matRandom(rang_l, rang_r, nc, nd);
 		vector<double> best_fitness(max_iteration);
 
 		vector<double> fit_popu(np);
 		vector<double> fit_popu_sorted(np);
-		Point in_te = po_random(rang_l, rang_r, nc, nd, 0);
+		Point indi_temp = pointRandom(rang_l, rang_r, nd, 0);
 
 		// Evaluate the fitness of n ideas
 		for (int times = 0; times < np; times++) 
 		{
-			fit_popu[times] = 1; // Add the evaluation function!!!!!!!!
+			fit_popu[times] = fun.fun(po[idx]); // Add the evaluation function!!!!!!!!
 		}
 
 		int n_iteration = 0;
@@ -158,10 +185,10 @@ int main(int argc, char *argv[])
 			
 			
 			// Select one cluster center to be replaced by a randomly generated center
-			if (randa() < 0.2) 
+			if (uniRand() < 0.2) 
 			{
-				int cenldx = floor(randa()*nc);
-				centers[cenldx] = po_random(rang_l, rang_r, nc, nd, cenldx);
+				int cenldx = floor(uniRand()*nc);
+				centers[cenldx] = pointRandom(rang_l, rang_r, nd, cenldx);
 			}
 
 			// Calculate cluster probabilities based on number of individuals in each cluster
@@ -178,22 +205,22 @@ int main(int argc, char *argv[])
 			// Generate new individuals
 			for (int times = 0; times < np; times++) 
 			{
-				double r_1 = randa();
+				double r_1 = uniRand();
 				if (r_1 < 0.8) 
 				{
-					double r = randa();
+					double r = uniRand();
 					for (int idj = 0; idj < nc; idj++) 
 					{
 						if (r < prob[idj]) 
 						{
-							if (randa() < 0.4) 
+							if (uniRand() < 0.4) 
 							{
-								in_te = centers[idj];
+								indi_temp = centers[idj];
 							}
 							else 
 							{
-								indi_1 = acculate_num_cluster[idj] + floor(randa() * number_in_cluster[idj]);
-								in_te = po_sort[indi_1];
+								indi_1 = acculate_num_cluster[idj] + floor(uniRand() * number_in_cluster[idj]);
+								indi_temp = po_sort[indi_1];
 							}
 							break;
 						}
@@ -201,25 +228,48 @@ int main(int argc, char *argv[])
 				}
 				else 
 				{
-					int c1 = floor(randa() * nc);
-					indi_1 = acculate_num_cluster[c1] + ceil(randa() * number_in_cluster[c1]);
-					int c2 = floor(randa() * nc);
-					int indi_2 = acculate_num_cluster[c2] + ceil(randa() * number_in_cluster[c2]);
-					double tem = randa();
-					if (randa() < 0.5) 
+					int c1 = floor(uniRand() * nc);
+					indi_1 = acculate_num_cluster[c1] + ceil(uniRand() * number_in_cluster[c1]);
+					int c2 = floor(uniRand() * nc);
+					int indi_2 = acculate_num_cluster[c2] + ceil(uniRand() * number_in_cluster[c2]);
+					double tem = uniRand();
+					if (uniRand() < 0.5) 
 					{
-						//写一个能将一个样本点里值全部乘系数的函数。
+						indi_temp = pointAdd(pointMtply(tem, centers[c1]), pointMtply((1-tem), centers[c2]));
+					}
+					else 
+					{
+						indi_temp = pointAdd(pointMtply(tem, po_sort[indi_1]), pointMtply((1 - tem), po_sort[indi_2]));
 					}
 				}
-			
-			
+				double coef = 1 / (1 + exp(-((0.5*max_iteration - n_iteration) / 20)));
+				Point stepSize = pointMtply(coef, pointRandom(0, 1, nd, 0));
+
+				default_random_engine e;
+				random_device r;
+				e.seed(r());
+				normal_distribution<double> n(0, 1); 
+				indi_temp = pointAdd(indi_temp, pointMtply(n(e), stepSize));
+
+				double fv = fun.fun(indi_temp); //添加评价函数
+
+				if (fv < fit_popu[times]) 
+				{
+					fit_popu[times] = fv;
+					indi_temp.setID(times);
+					po[times] = indi_temp;
+				}
 			}
 			
-			
-
-
-
+			for (int times = 0; times < nc; times++) 
+			{
+				po[best[times]] = centers_copy[times];
+				fit_popu[best[times]] = fit_values[times];
+			}
+		
 			n_iteration++;
+			// record the best fitness in each iteration
+			best_fitness[n_iteration] = *min_element(fit_values.begin(), fit_values.end());
 		}
 	}
 

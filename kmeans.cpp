@@ -51,9 +51,9 @@ int Point::getDimension()
 	return nd;
 }
 
-void Point::addValue(double value)
+void Point::setValue(int index,double value)
 {
-	values.push_back(value);
+	values[index] = value;
 }
 
 
