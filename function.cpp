@@ -7,6 +7,7 @@
 #include <string>
 #include "kmeans.h"
 #include "function.h"
+
 using namespace std;
 
 Function::Function() 
@@ -16,5 +17,6 @@ Function::Function()
 
 double Function::fun(Point point) 
 {
-	return 1;
+	
+	
 }

@@ -251,7 +251,7 @@ void KMeans::run(vector<Point> & po)
 			if (id_old_cluster != id_nearest_center)
 			{
 				if (id_old_cluster != -1)
-					clusters[id_old_cluster].removePoint(po[i].getID());
+					clusters[id_old_cluster].removePoint(po[i].getID()); //换一种办法标记样本点
 
 				po[i].setCluster(id_nearest_center);
 				clusters[id_nearest_center].removePoint(-1); // 低效的操作
