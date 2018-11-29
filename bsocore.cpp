@@ -10,6 +10,7 @@
 #include "function.h"
 
 
+
 #define INF 100000000;
 using namespace std;
 
@@ -85,20 +86,30 @@ Point pointAdd(Point p1, Point p2)
 }
 
 
+/*
+//MATLAB调用形式： bestfitness = bsocore(n_p, n_d, n_c, rang_l, rang_r, max_iteration)
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+	if (nrhs != 6)
+	{
+		mexErrMsgTxt("参数个数不正确!");
+	}
+}*/
+
 int main(int argc, char *argv[])
 {	
 	srand(time(NULL));
 
-	const int np = 48; // Number of population
-	const int nd = 24; // Number of dimension
-	const int nc = 3;  // Number of cluster
+	const int np = 108; // Number of population
+	const int nd = 3; // Number of dimension
+	const int nc = 6;  // Number of cluster
 	// Point values limits
 	const double rang_l = -5.12;
 	const double rang_r = 5.12;
 	// Pick any deviations you want
-	const int max_iteration = 8;
+	const int max_iteration = 12;
 	// Pick any laps you want
-	const int max_run = 1;
+	const int max_run = 2;
 	Function fun;
 
 	// Runs off laps from here
@@ -133,7 +144,7 @@ int main(int argc, char *argv[])
 		int n_iteration = 0;
 		while (n_iteration < max_iteration) 
 		{
-			cout << "Iteration: " << n_iteration << endl;
+			//cout << "Iteration: " << n_iteration << endl;
 			KMeans kmeans(nc, np, nd, 100, centers);
 			kmeans.run(popu);  // Cluster each population
 			
@@ -147,7 +158,7 @@ int main(int argc, char *argv[])
 			{
 				fit_values[clu] = INF;  // Assign a initial big fitness value as best fitness
 				number_in_cluster[clu] = kmeans.getCluster(clu).getSize(); 
-				cout << "number_in_cluster: clu: " << clu << " value: " << number_in_cluster[clu] << endl;
+				//cout << "number_in_cluster: clu: " << clu << " value: " << number_in_cluster[clu] << endl;
 			}
 
 			for (int times = 0; times < np; times++) 
@@ -165,11 +176,11 @@ int main(int argc, char *argv[])
 			
 			// Check with every cluster
 			acculate_num_cluster[0] = 0;
-			cout << "acculate_num_cluster: " << 0 << " value: " << acculate_num_cluster[0] << endl;
+			//cout << "acculate_num_cluster: " << 0 << " value: " << acculate_num_cluster[0] << endl;
 			for (int times = 1; times < nc; times++) 
 			{
 				acculate_num_cluster[times] = acculate_num_cluster[times - 1] + number_in_cluster[times - 1];
-				cout << "acculate_num_cluster: " << times << " value: " << acculate_num_cluster[times] << endl;
+				//cout << "acculate_num_cluster: " << times << " value: " << acculate_num_cluster[times] << endl;
 			}
 			
 			
@@ -264,7 +275,7 @@ int main(int argc, char *argv[])
 				indi_temp = pointAdd(indi_temp, pointMtply(n(e), stepSize));
 
 				double fv = fun.fun(indi_temp); //添加评价函数
-
+				
 				if (fv < fit_popu[times]) 
 				{
 					fit_popu[times] = fv;
@@ -282,9 +293,22 @@ int main(int argc, char *argv[])
 		
 			
 			// record the best fitness in each iteration
-			best_fitness[n_iteration] = *min_element(fit_values.begin(), fit_values.end());
+			double min = INF;
+			for (int k = 0; k < fit_values.size(); k++) 
+			{
+				cout << "fv: " << fit_values[k] << endl;
+				if (min > fit_values[k]) min = fit_values[k];
+			}
+			best_fitness[n_iteration] = min;
+			
 			n_iteration++;
 		}
+		cout << "bestfitness: ";
+		for (int succ = 0; succ < best_fitness.size(); succ++) 
+		{
+			cout << best_fitness[succ] << " ";
+		}
+		cout << endl;
 	}
 
 	cout << "Enter any character to exit" << endl;
