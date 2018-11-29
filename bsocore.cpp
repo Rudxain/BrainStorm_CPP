@@ -8,8 +8,12 @@
 #include <random>
 #include "kmeans.h"
 #include "function.h"
+
+
 #define INF 100000000;
 using namespace std;
+
+// Gnerate an uniform distribution random variable in [0, 1]
 double uniRand() 
 {
 	default_random_engine e;
@@ -19,7 +23,7 @@ double uniRand()
 	return u(e);
 }
 
-vector<Point> matRandom(double min, double max, int m, int n) 
+vector<Point> randomSet(double min, double max, int m, int n) 
 {
 	vector<Point> po;
 	for (int i = 0; i < m; i++)
@@ -39,7 +43,7 @@ vector<Point> matRandom(double min, double max, int m, int n)
 	return po;
 }
 
-Point pointRandom(double min, double max, int n, int id) 
+Point randomPoint(double min, double max, int n, int id) 
 {
 	vector<double> content;
 	for (int j = 0; j < n; j++)
@@ -102,24 +106,28 @@ int main(int argc, char *argv[])
 	{
 		
 		// Genetate a random 
-		vector<Point> po = matRandom(rang_l, rang_r, np, nd);
-		vector<Point> po_sort = matRandom(rang_l, rang_r, np, nd);
+		vector<Point> popu = randomSet(rang_l, rang_r, np, nd);
+		vector<Point> popu_sort = randomSet(rang_l, rang_r, np, nd);
 		
-		vector<double> prob(nc);
-		vector<double> best(nc);
+		vector<double> prob(nc); // Initialize cluster probability
+		vector<double> best(nc); // Index of best individual in each cluster
+
 		
-		vector<Point> centers = matRandom(rang_l, rang_r, nc, nd);
-		vector<Point> centers_copy = matRandom(rang_l, rang_r, nc, nd);
+		vector<Point> centers = randomSet(rang_l, rang_r, nc, nd); // Randomly pick a best individual in each cluster
+		
+	    // initialize best individual - COPY in each cluster FOR the purpose of introduce random best
+		vector<Point> centers_copy = randomSet(rang_l, rang_r, nc, nd); 
 		vector<double> best_fitness(max_iteration);
 
-		vector<double> fit_popu(np);
-		vector<double> fit_popu_sorted(np);
-		Point indi_temp = pointRandom(rang_l, rang_r, nd, 0);
+		vector<double> fit_popu(np); // Store fitness value for each individual
+		vector<double> fit_popu_sorted(np); // Store fitness value for each sorted individual
+		Point indi_temp = randomPoint(rang_l, rang_r, nd, 0); // Store temperary individual
+
 
 		// Evaluate the fitness of n ideas
 		for (int times = 0; times < np; times++) 
 		{
-			fit_popu[times] = fun.fun(po[idx]); // Add the evaluation function!!!!!!!!
+			fit_popu[times] = fun.fun(popu[times]); // Add the evaluation function!!!!!!!!
 		}
 
 		int n_iteration = 0;
@@ -127,42 +135,43 @@ int main(int argc, char *argv[])
 		{
 			cout << "Iteration: " << n_iteration << endl;
 			KMeans kmeans(nc, np, nd, 100, centers);
-			kmeans.run(po);
+			kmeans.run(popu);  // Cluster each population
 			
 
 			vector<int> cluster = kmeans.getDependency(); // Containing cluster indices of each observation.
-			vector<double> fit_values(nc);
+			vector<double> fit_values(nc); 
 			vector<int> number_in_cluster(nc); // The number of points in each cluster
 
+			// Initialize the fit_values and get the number in each cluster
 			for (int clu = 0; clu < nc; clu++) 
 			{
-				fit_values[clu] = INF;
-				number_in_cluster[clu] = kmeans.getCluster(clu).getSize();
+				fit_values[clu] = INF;  // Assign a initial big fitness value as best fitness
+				number_in_cluster[clu] = kmeans.getCluster(clu).getSize(); 
 				cout << "number_in_cluster: clu: " << clu << " value: " << number_in_cluster[clu] << endl;
 			}
 
 			for (int times = 0; times < np; times++) 
 			{
+				// Find the best individual in each cluster
 				if (fit_values[cluster[times]] > fit_popu[times]) 
 				{
 					fit_values[cluster[times]] = fit_popu[times];
-					best[cluster[times]] = times;					
+					best[cluster[times]] = times; // Refresh the index of best individual in each cluster			
 				}
 			}
 
-			// Initialization cluster
-			vector<int> counter_cluster(nc);
-			// Accumulated number of individuals in previous clusters
-			vector<int> acculate_num_cluster(nc);
+			vector<int> counter_cluster(nc); // Initialization cluster counter
+			vector<int> acculate_num_cluster(nc); // Accumulated number of individuals in previous clusters
+			
+			// Check with every cluster
 			acculate_num_cluster[0] = 0;
 			cout << "acculate_num_cluster: " << 0 << " value: " << acculate_num_cluster[0] << endl;
-
-			// Check with every cluster
 			for (int times = 1; times < nc; times++) 
 			{
 				acculate_num_cluster[times] = acculate_num_cluster[times - 1] + number_in_cluster[times - 1];
 				cout << "acculate_num_cluster: " << times << " value: " << acculate_num_cluster[times] << endl;
 			}
+			
 			
 			
 			// Evaluate the individuals
@@ -171,26 +180,28 @@ int main(int argc, char *argv[])
 				counter_cluster[cluster[times]]++;
 				int temldx = acculate_num_cluster[cluster[times]] + counter_cluster[cluster[times]];
 				//cout << "times: " << times << " temldx: " << temldx << endl;
-				po_sort[temldx-1] = po[times];
-				fit_popu_sorted[temldx-1] = fit_popu[times];
+				popu_sort[temldx-1] = popu[times]; // The population of individuals sorted according to clusters
+				fit_popu_sorted[temldx-1] = fit_popu[times]; // Fitness value for each sorted individual
+
 			}
 			
 			// Rank individuals in each cluster
 			for (int times = 0; times < nc; times++) 
 			{
-				centers[times] = po[best[times]];
+				centers[times] = popu[best[times]];
 			}
 			// make a copy
-			centers_copy.assign(centers.begin(), centers.end());
+			centers_copy.assign(centers.begin(), centers.end()); //¼ì²éÊÇ·ñ¸´ÖÆ
 			
 			
 			// Select one cluster center to be replaced by a randomly generated center
 			if (uniRand() < 0.2) 
 			{
 				int cenldx = floor(uniRand()*nc);
-				centers[cenldx] = pointRandom(rang_l, rang_r, nd, cenldx);
+				centers[cenldx] = randomPoint(rang_l, rang_r, nd, cenldx);
 			}
 
+			
 			// Calculate cluster probabilities based on number of individuals in each cluster
 			for (int times = 0; times < nc; times++) 
 			{
@@ -200,6 +211,7 @@ int main(int argc, char *argv[])
 					prob[times] = prob[times] + prob[times - 1];
 				}
 			}
+			
 			
 			int indi_1;
 			// Generate new individuals
@@ -220,7 +232,7 @@ int main(int argc, char *argv[])
 							else 
 							{
 								indi_1 = acculate_num_cluster[idj] + floor(uniRand() * number_in_cluster[idj]);
-								indi_temp = po_sort[indi_1];
+								indi_temp = popu_sort[indi_1];
 							}
 							break;
 						}
@@ -229,9 +241,9 @@ int main(int argc, char *argv[])
 				else 
 				{
 					int c1 = floor(uniRand() * nc);
-					indi_1 = acculate_num_cluster[c1] + ceil(uniRand() * number_in_cluster[c1]);
+					indi_1 = acculate_num_cluster[c1] + floor(uniRand() * number_in_cluster[c1]);
 					int c2 = floor(uniRand() * nc);
-					int indi_2 = acculate_num_cluster[c2] + ceil(uniRand() * number_in_cluster[c2]);
+					int indi_2 = acculate_num_cluster[c2] + floor(uniRand() * number_in_cluster[c2]);
 					double tem = uniRand();
 					if (uniRand() < 0.5) 
 					{
@@ -239,11 +251,11 @@ int main(int argc, char *argv[])
 					}
 					else 
 					{
-						indi_temp = pointAdd(pointMtply(tem, po_sort[indi_1]), pointMtply((1 - tem), po_sort[indi_2]));
+						indi_temp = pointAdd(pointMtply(tem, popu_sort[indi_1]), pointMtply((1 - tem), popu_sort[indi_2]));
 					}
 				}
 				double coef = 1 / (1 + exp(-((0.5*max_iteration - n_iteration) / 20)));
-				Point stepSize = pointMtply(coef, pointRandom(0, 1, nd, 0));
+				Point stepSize = pointMtply(coef, randomPoint(0, 1, nd, 0));
 
 				default_random_engine e;
 				random_device r;
@@ -257,22 +269,25 @@ int main(int argc, char *argv[])
 				{
 					fit_popu[times] = fv;
 					indi_temp.setID(times);
-					po[times] = indi_temp;
+					popu[times] = indi_temp;
 				}
 			}
 			
+			
 			for (int times = 0; times < nc; times++) 
 			{
-				po[best[times]] = centers_copy[times];
+				popu[best[times]] = centers_copy[times];
 				fit_popu[best[times]] = fit_values[times];
 			}
 		
-			n_iteration++;
+			
 			// record the best fitness in each iteration
 			best_fitness[n_iteration] = *min_element(fit_values.begin(), fit_values.end());
+			n_iteration++;
 		}
 	}
 
+	cout << "Enter any character to exit" << endl;
 	int i;
 	cin >> i;
 	return 0;
