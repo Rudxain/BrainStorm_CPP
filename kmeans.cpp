@@ -26,7 +26,7 @@ int Point::getID()
 	return id_point;
 }
 
-void Point::setID(int id) 
+void Point::setID(int id)
 {
 	this->id_point = id;
 }
@@ -51,7 +51,7 @@ int Point::getDimension()
 	return nd;
 }
 
-void Point::setValue(int index,double value)
+void Point::setValue(int index, double value)
 {
 	values[index] = value;
 }
@@ -66,27 +66,17 @@ Cluster::Cluster(int id_cluster, Point point)
 	for (int i = 0; i < dimension; i++)
 		central_values.push_back(point.getValue(i));
 
-	points.push_back(point);
+	points.insert(pair<int, Point>(point.getID(), point));
 }
 
 void Cluster::addPoint(Point point)
 {
-	points.push_back(point);
+	points.insert(pair<int, Point>(point.getID(), point));
 }
 
-bool Cluster::removePoint(int id_point)
+void Cluster::removePoint(int id_point)
 {
-	int total_points = points.size();
-
-	for (int i = 0; i < total_points; i++)
-	{
-		if (points[i].getID() == id_point)
-		{
-			points.erase(points.begin() + i);
-			return true;
-		}
-	}
-	return false;
+	points.erase(id_point);
 }
 
 double Cluster::getCentralValue(int index)
@@ -99,11 +89,6 @@ void Cluster::setCentralValue(int index, double value)
 	central_values[index] = value;
 }
 
-Point Cluster::getPoint(int index)
-{
-	return points[index];
-}
-
 int Cluster::getSize()
 {
 	return points.size();
@@ -112,6 +97,11 @@ int Cluster::getSize()
 int Cluster::getID()
 {
 	return id_cluster;
+}
+
+map<int, Point> Cluster::getPoints()
+{
+	return points;
 }
 
 
@@ -130,7 +120,7 @@ int KMeans::getNearestCentreId(Point point)
 	double sum = 0.0, min_dist;
 	int nearest_centre_id = 0;
 
-		
+
 	// Initial
 	// Uses city block distance
 	for (int i = 0; i < nd; i++)
@@ -139,7 +129,7 @@ int KMeans::getNearestCentreId(Point point)
 			point.getValue(i));
 	}
 	min_dist = sum;
-		
+
 	for (int i = 1; i < nc; i++)
 	{
 		double dist;
@@ -178,7 +168,7 @@ Cluster KMeans::getCluster(int index)
 	return clusters[index];
 }
 
-vector<int> KMeans::getDependency() 
+vector<int> KMeans::getDependency()
 {
 	return dependency;
 }
@@ -192,7 +182,7 @@ void KMeans::run(vector<Point> & po)
 
 	/*
 	//_2018-11-19
-	// Initial the cluster centre using exsiting points（random pick)
+	// Initial the cluster centre using exsiting points random pick)
 	for (int i = 0; i < nc; i++)
 	{
 		while (true)
@@ -211,9 +201,9 @@ void KMeans::run(vector<Point> & po)
 	}
 	*/
 
-	
+
 	// Initial the cluster centre by using the provided centre_2018-11-19
-	for (int i = 0; i < nc; i++) 
+	for (int i = 0; i < nc; i++)
 	{
 		init_centres[i].setID(-1);
 		Cluster centre(i, init_centres[i]);
@@ -233,7 +223,7 @@ void KMeans::run(vector<Point> & po)
 	}
 	*/
 
-	for (int i = 0; i < np; i++) 
+	for (int i = 0; i < np; i++)
 	{
 		po[i].setCluster(-1);
 	}
@@ -251,15 +241,15 @@ void KMeans::run(vector<Point> & po)
 			if (id_old_cluster != id_nearest_center)
 			{
 				if (id_old_cluster != -1)
-					clusters[id_old_cluster].removePoint(po[i].getID()); //换一种办法标记样本点
+					clusters[id_old_cluster].removePoint(po[i].getID()); 
 
 				po[i].setCluster(id_nearest_center);
-				clusters[id_nearest_center].removePoint(-1); // 低效的操作
+				clusters[id_nearest_center].removePoint(-1); 
 				clusters[id_nearest_center].addPoint(po[i]);
 
 				done = false;
 			}
-			
+
 		}
 
 		// recalculating the center of each cluster
@@ -267,21 +257,26 @@ void KMeans::run(vector<Point> & po)
 		{
 			for (int j = 0; j < nd; j++)
 			{
-				int total_points_cluster = clusters[i].getSize();
 				double sum = 0.0;
+				map<int, Point> points = clusters[i].getPoints();
+				map<int, Point>::iterator iter = points.begin();
+				
 
-				if (total_points_cluster > 0)
+				if (points.size() > 0)
 				{
-					for (int p = 0; p < total_points_cluster; p++)
-						sum += clusters[i].getPoint(p).getValue(j);
-					clusters[i].setCentralValue(j, sum / total_points_cluster);
+					while (iter != points.end())
+					{
+						sum += iter->second.getValue(j);
+						iter++;
+					}
+					clusters[i].setCentralValue(j, sum / clusters[i].getSize());
 				}
 			}
 		}
 
 		if (done == true || iter >= max_iterations)
 		{
-			cout << "Break in iteration " << iter << "\n\n";
+			//cout << "Break in iteration " << iter << "\n";
 			break;
 		}
 		iter++;
@@ -293,12 +288,16 @@ void KMeans::run(vector<Point> & po)
 	}
 	for (int i = 0; i < nc; i++)
 	{
-		for (int j = 0; j < getCluster(i).getSize(); j++)
+		
+		map<int, Point> points = getCluster(i).getPoints();
+		points.erase(-1);
+		map<int, Point>::iterator iter = points.begin();
+		while (iter != points.end())
 		{
-			int id = getCluster(i).getPoint(j).getID();
-			//cout << "id: " << id << endl;
+			int id = iter->first;
+			
 			dependency[id] = i;
-		}
+			iter++;
+		}		
 	}
 }
-
