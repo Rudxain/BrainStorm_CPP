@@ -1,25 +1,24 @@
+// Authors: Siqing Ma
+// Date: 2018-11-15 created, 2018-12-1 updated
+// BSO FUNCTION
+
+
 #include <iostream>
 #include <vector>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
 #include <algorithm>
-#include <string>
 #include "kmeans.h"
 #include "function.h"
-#include <stack>
 
 
 using namespace std;
 
-Function::Function()
-{
-
-}
+Function::Function() {}
 
 double Function::fun(Point point)
 {
-	//cout << "fun: " << endl;
 	double z = 0;
 	for (int i = 0; i < 10; i++) 
 	{

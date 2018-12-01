@@ -1,3 +1,9 @@
+// Authors: Siqing Ma
+// Date: 2018-11-15 created, 2018-12-1 updated
+// Kmeans algorithm 
+// Distance mode: "cityblock"
+// EmptyAction mode: "singleton"
+
 #include <iostream>
 #include <vector>
 #include <math.h>
@@ -7,11 +13,6 @@
 #include <string>
 #include "kmeans.h"
 using namespace std;
-/**
-Created:2018-11-17, Updated:2018-11-17
-Author: Siqing Ma
-Version: V0.1T
-**/
 
 Point::Point(int id_point, vector<double>& values)
 {
@@ -105,6 +106,7 @@ map<int, Point> Cluster::getPoints()
 }
 
 
+
 KMeans::KMeans(int nc, int np, int nd, int max_iterations, vector<Point> centers)
 {
 	this->nc = nc;
@@ -114,7 +116,6 @@ KMeans::KMeans(int nc, int np, int nd, int max_iterations, vector<Point> centers
 	this->init_centres = centers;
 }
 
-// return ID of nearest center 
 int KMeans::getNearestCentreId(Point point)
 {
 	double sum = 0.0, min_dist;

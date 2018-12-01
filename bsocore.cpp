@@ -2,7 +2,6 @@
 // Date: 2018-11-15 created, 2018-12-1 updated
 // BSO CORE
 
-
 #include <iostream>
 #include <vector>
 #include <math.h>
@@ -17,7 +16,10 @@
 using namespace std;
 #define INF 1000000000;
 
-// Gnerate an uniform distribution random variable in [0, 1]
+
+/*
+*  Gnerate an uniform distribution random variable in [0, 1]
+*/
 double uniRand()
 {
 	default_random_engine e;
@@ -27,6 +29,11 @@ double uniRand()
 	return u(e);
 }
 
+/* Generate a set of random value sample points
+*  [min, max]: the uniform distribution domain
+*  m: Sample point number
+*  n: Single point value dimension
+*/
 vector<Point> randomSet(double min, double max, int m, int n)
 {
 	vector<Point> po;
@@ -44,6 +51,11 @@ vector<Point> randomSet(double min, double max, int m, int n)
 	return po;
 }
 
+/* Generate a random value sample points
+*  [min, max]: the uniform distribution domain
+*  n: Point value dimension
+*  id: Point id
+*/
 Point randomPoint(double min, double max, int n, int id)
 {
 	vector<double> content;
@@ -57,6 +69,10 @@ Point randomPoint(double min, double max, int n, int id)
 	return point;
 }
 
+/* Sample point multiply with a number (value * coef)
+*  coef: 
+*  origin: 
+*/
 Point pointMtply(double coef, Point origin)
 {
 	int dim = origin.getDimension();
@@ -69,6 +85,10 @@ Point pointMtply(double coef, Point origin)
 	return ans;
 }
 
+/* Sample point multiply with each other (value * value)
+*  p1:
+*  p2:
+*/
 Point pointAdd(Point p1, Point p2)
 {
 	int dim = p1.getDimension();
@@ -97,7 +117,7 @@ int main(int argc, char *argv[])
 	const int max_iteration = 250; // Pick any deviations you want
 	
 	const int max_run = 5; // Pick any laps you want
-	Function fun;
+	Function Fun;
 
 	// Runs off laps from here
 	for (int idx = 0; idx < max_run; idx++)
@@ -120,7 +140,7 @@ int main(int argc, char *argv[])
 		// Evaluate the fitness of n ideas
 		for (int times = 0; times < np; times++)
 		{
-			fit_popu[times] = fun.fun(popu[times]); 
+			fit_popu[times] = Fun.fun(popu[times]); 
 		}
 
 		int n_iteration = 0;
@@ -139,7 +159,6 @@ int main(int argc, char *argv[])
 			{
 				fit_values[clu] = INF;  // Assign a initial big fitness value as best fitness
 				number_in_cluster[clu] = kmeans.getCluster(clu).getSize();
-				//cout << "number_in_cluster: clu: " << clu << " value: " << number_in_cluster[clu] << endl;
 			}
 
 			for (int times = 0; times < np; times++)
@@ -157,11 +176,9 @@ int main(int argc, char *argv[])
 
 			// Check with every cluster
 			acculate_num_cluster[0] = 0;
-			//cout << "acculate_num_cluster: " << 0 << " value: " << acculate_num_cluster[0] << endl;
 			for (int times = 1; times < nc; times++)
 			{
 				acculate_num_cluster[times] = acculate_num_cluster[times - 1] + number_in_cluster[times - 1];
-				//cout << "acculate_num_cluster: " << times << " value: " << acculate_num_cluster[times] << endl;
 			}
 
 			// Evaluate the individuals
@@ -230,6 +247,7 @@ int main(int argc, char *argv[])
 					indi_1 = acculate_num_cluster[c1] + floor(uniRand() * number_in_cluster[c1]);
 					c2 = floor(uniRand() * nc);
 					indi_2 = acculate_num_cluster[c2] + floor(uniRand() * number_in_cluster[c2]);
+					
 					double tem = uniRand();
 					if (uniRand() < 0.5)
 					{
@@ -247,7 +265,7 @@ int main(int argc, char *argv[])
 				normal_distribution<double> n(0, 1);
 				indi_temp = pointAdd(indi_temp, pointMtply(n(e), stepSize));
 
-				double fv = fun.fun(indi_temp); 
+				double fv = Fun.fun(indi_temp); 
 
 				if (fv < fit_popu[times])
 				{
@@ -267,7 +285,6 @@ int main(int argc, char *argv[])
 			double min = INF;
 			for (int k = 0; k < fit_values.size(); k++)
 			{
-				//cout << "fv: " << fit_values[k] << endl;
 				if (min > fit_values[k]) min = fit_values[k];
 			}
 			best_fitness[n_iteration] = min;
@@ -275,7 +292,7 @@ int main(int argc, char *argv[])
 			n_iteration++;
 		}
 
-		cout << "bestfitness: ";
+		cout << "Best Fitness: ";
 		for (int succ = 0; succ < best_fitness.size(); succ++)
 		{
 			cout << best_fitness[succ] << " ";
