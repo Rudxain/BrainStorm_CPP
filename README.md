@@ -18,6 +18,7 @@ Also provide a demo of K_means algorithm.
 存在问题：
 	运行速度较慢，提高运行速度可能要改变现有架构。
 	
+代码实时更新：https://github.com/Travis-MA/BSO_CPP
 
 
 
