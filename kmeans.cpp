@@ -66,7 +66,7 @@ Cluster::Cluster(int id_cluster, Point point)
 	for (int i = 0; i < dimension; i++)
 		central_values.push_back(point.getValue(i));
 
-	points.insert(pair<int, Point>(point.getID(), point));
+	//points.insert(pair<int, Point>(point.getID(), point));
 }
 
 void Cluster::addPoint(Point point)
@@ -134,17 +134,6 @@ int KMeans::getNearestCentreId(Point point)
 	{
 		double dist;
 		sum = 0.0;
-
-		/*
-		// Uses euclidean distance
-		for (int j = 0; j < nd; j++)
-		{
-			sum += pow(clusters[i].getCentralValue(j) -
-				point.getValue(j), 2.0);
-		}
-		dist = sqrt(sum);
-		*/
-
 		// Uses city block distance
 		for (int j = 0; j < nd; j++)
 		{
@@ -159,7 +148,6 @@ int KMeans::getNearestCentreId(Point point)
 			nearest_centre_id = i;
 		}
 	}
-
 	return nearest_centre_id;
 }
 
@@ -180,28 +168,6 @@ void KMeans::run(vector<Point> & po)
 
 	vector<int> now_indexes;
 
-	/*
-	//_2018-11-19
-	// Initial the cluster centre using exsiting points random pick)
-	for (int i = 0; i < nc; i++)
-	{
-		while (true)
-		{
-			int index_point = rand() % np;
-
-			if (find(now_indexes.begin(), now_indexes.end(), index_point) == now_indexes.end())
-			{
-				now_indexes.push_back(index_point);
-				po[index_point].setCluster(i);
-				Cluster cluster(i, po[index_point]);
-				clusters.push_back(cluster);
-				break;
-			}
-		}
-	}
-	*/
-
-
 	// Initial the cluster centre by using the provided centre_2018-11-19
 	for (int i = 0; i < nc; i++)
 	{
@@ -209,19 +175,6 @@ void KMeans::run(vector<Point> & po)
 		Cluster centre(i, init_centres[i]);
 		clusters.push_back(centre);
 	}
-
-	/*
-	// Print the cluster centre
-	for (int i = 0; i < nc; i++)
-	{
-		cout << "clu: " << i;
-		for (int j = 0; j < nd; j++)
-		{
-			cout << clusters[i].getCentralValue(j) << " ";
-		}
-		cout << endl;
-	}
-	*/
 
 	for (int i = 0; i < np; i++)
 	{
@@ -246,56 +199,77 @@ void KMeans::run(vector<Point> & po)
 				po[i].setCluster(id_nearest_center);
 				clusters[id_nearest_center].removePoint(-1); 
 				clusters[id_nearest_center].addPoint(po[i]);
-
 				done = false;
 			}
-
 		}
 
 		// recalculating the center of each cluster
+		map<int, Point> points;
 		for (int i = 0; i < nc; i++)
 		{
 			for (int j = 0; j < nd; j++)
 			{
 				double sum = 0.0;
-				map<int, Point> points = clusters[i].getPoints();
+				points = clusters[i].getPoints();
 				map<int, Point>::iterator iter = points.begin();
 				
-
 				if (points.size() > 0)
 				{
 					while (iter != points.end())
 					{
-						sum += iter->second.getValue(j);
-						iter++;
+						sum += iter->second.getValue(j); iter++;
 					}
 					clusters[i].setCentralValue(j, sum / clusters[i].getSize());
 				}
 			}
 		}
-
-		if (done == true || iter >= max_iterations)
-		{
-			//cout << "Break in iteration " << iter << "\n";
-			break;
-		}
+		if (done == true || iter >= max_iterations) break;
 		iter++;
 	}
 
-	for (int i = 0; i < np; i++)
+	//check empty
+	int new_cluster = 0;
+	double maxlen = -10000000;
+	double sum = 0;
+	for (int i = 0; i < nc; i++) 
 	{
-		dependency.push_back(0);
+		if (clusters[i].getSize() == 0)
+		{	
+			for (int j = 0; j < po.size(); j++) 
+			{
+				for (int k = 0; k < nd; k++)
+				{
+					sum += abs(clusters[i].getCentralValue(k) - po[j].getValue(k));
+				}
+				if (sum > maxlen) 
+				{
+					maxlen = sum;
+					new_cluster = j;
+				}
+			}
+			int oclu = po[new_cluster].getCluster();
+			po[new_cluster].setCluster(i);
+			clusters[i].addPoint(po[new_cluster]);
+			for (int j = 0; j < nd; j++) 
+			{
+				clusters[i].setCentralValue(j, po[new_cluster].getValue(j));
+			}
+			clusters[oclu].removePoint(po[new_cluster].getID());
+			//cout << "add: " << i << " ps: " << presize << " ns " << nowsize << " clusize: " << clusters[i].getSize()<< endl;
+		}
 	}
+
+	dependency.resize(np);
+	int id = 0;
+	map<int, Point> points;
 	for (int i = 0; i < nc; i++)
 	{
-		
-		map<int, Point> points = getCluster(i).getPoints();
+		points = clusters[i].getPoints();
 		points.erase(-1);
 		map<int, Point>::iterator iter = points.begin();
 		while (iter != points.end())
 		{
-			int id = iter->first;
-			
+			id = iter->first;
 			dependency[id] = i;
 			iter++;
 		}		
